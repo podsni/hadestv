@@ -53,18 +53,50 @@ export function StreamPlayer({
     if (Hls.isSupported()) {
       hls = new Hls({
         enableWorker: true,
-        lowLatencyMode: true,
+        lowLatencyMode: false,
+        maxBufferLength: 30,
+        maxMaxBufferLength: 60,
+        manifestLoadingTimeOut: 10000,
+        manifestLoadingMaxRetry: 3,
+        levelLoadingTimeOut: 10000,
+        levelLoadingMaxRetry: 3,
+        fragLoadingTimeOut: 20000,
+        fragLoadingMaxRetry: 3,
       });
-      hls.loadSource(stream.url);
-      hls.attachMedia(video);
+
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        console.log(`[HLS] Manifest loaded for ${channel?.name}`);
+        video.play().catch(err => console.warn('[HLS] Autoplay prevented:', err));
+      });
+
       hls.on(Hls.Events.ERROR, (_, data) => {
+        console.error('[HLS] Error:', data.type, data.details, data.fatal);
         if (data.fatal) {
-          safeSetState("error");
+          switch (data.type) {
+            case Hls.ErrorTypes.NETWORK_ERROR:
+              console.log('[HLS] Network error, attempting recovery...');
+              hls?.startLoad();
+              break;
+            case Hls.ErrorTypes.MEDIA_ERROR:
+              console.log('[HLS] Media error, attempting recovery...');
+              hls?.recoverMediaError();
+              break;
+            default:
+              console.log('[HLS] Fatal error, cannot recover');
+              safeSetState("error");
+              break;
+          }
         }
       });
+
+      hls.loadSource(stream.url);
+      hls.attachMedia(video);
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+      console.log('[Native HLS] Loading stream natively');
       video.src = stream.url;
+      video.load();
     } else {
+      console.error('[Player] HLS not supported');
       safeSetState("error");
     }
 

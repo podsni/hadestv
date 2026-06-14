@@ -27,13 +27,13 @@ export function ChannelList({
   onShowMore: () => void;
 }) {
   return (
-    <section className="rounded-lg border border-border bg-card">
-      <div className="flex items-center justify-between border-b border-border px-4 py-3">
-        <h2 className="font-semibold">Daftar channel</h2>
+    <section className="rounded-lg border border-border bg-card shadow-sm">
+      <div className="flex items-center justify-between border-b border-border px-3 py-2.5 md:px-4 md:py-3">
+        <h2 className="text-sm font-semibold md:text-base">Daftar channel</h2>
         {isLoading ? <Loader2 className="size-4 animate-spin text-muted-foreground" aria-label="Memuat" /> : null}
       </div>
 
-      <div className="max-h-[640px] overflow-y-auto p-2">
+      <div className="max-h-[500px] overflow-y-auto p-1.5 md:max-h-[640px] md:p-2">
         {isLoading ? (
           <ChannelSkeleton />
         ) : channels.length > 0 ? (
@@ -43,30 +43,33 @@ export function ChannelList({
                 key={channel.id}
                 type="button"
                 onClick={() => onSelect(channel)}
-                className={`flex w-full items-center gap-3 rounded-md p-3 text-left transition hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                className={`flex w-full items-center gap-2.5 rounded-md p-2.5 text-left transition hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:gap-3 md:p-3 ${
                   selectedId === channel.id ? "bg-accent text-accent-foreground" : ""
                 }`}
               >
-                <ChannelLogo channel={channel} />
+                <ChannelLogo channel={channel} size="md" />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-medium">{channel.name}</span>
-                  <span className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-                    <span>{channel.countryFlag || "-"} {channel.countryName}</span>
+                  <span className="mt-0.5 flex flex-wrap items-center gap-1 text-xs text-muted-foreground md:gap-1.5">
+                    <span className="shrink-0">{channel.countryFlag || "-"}</span>
+                    <span className="truncate">{channel.countryName}</span>
                     <span aria-hidden="true">•</span>
-                    <span>{channel.categoryNames[0] ?? "General"}</span>
-                    <span aria-hidden="true">•</span>
-                    <span>{channel.streamCount} stream</span>
-                    <span aria-hidden="true">•</span>
-                    <span>{channel.streams[0]?.compatibility === "best" ? "Optimal" : "Terbatas"}</span>
+                    <span className="truncate">{channel.categoryNames[0] ?? "General"}</span>
+                    {channel.streamCount > 1 ? (
+                      <>
+                        <span aria-hidden="true">•</span>
+                        <span>{channel.streamCount}</span>
+                      </>
+                    ) : null}
                   </span>
                 </span>
-                {favoriteIds.has(channel.id) ? <Heart className="size-4 fill-current text-primary" aria-hidden="true" /> : null}
+                {favoriteIds.has(channel.id) ? <Heart className="size-4 shrink-0 fill-current text-primary" aria-hidden="true" /> : null}
               </button>
             ))}
 
             {hasMore ? (
-              <div className="border-t border-border p-2">
-                <Button type="button" variant="outline" className="w-full" onClick={onShowMore}>
+              <div className="border-t border-border p-1.5 md:p-2">
+                <Button type="button" variant="outline" className="w-full text-sm" onClick={onShowMore}>
                   Tampilkan {nextBatchCount} lagi
                 </Button>
               </div>

@@ -45,11 +45,11 @@ export function ChannelFilters({
   }
 
   return (
-    <section className="rounded-lg border border-border bg-card p-4">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <div>
-          <h2 className="font-semibold">Cari channel</h2>
-          <p className="text-sm text-muted-foreground">Search, filter, dan favorit lokal.</p>
+    <section className="rounded-lg border border-border bg-card p-3 shadow-sm md:p-4">
+      <div className="mb-3 flex items-center justify-between gap-2 md:mb-4 md:gap-3">
+        <div className="min-w-0">
+          <h2 className="text-sm font-semibold md:text-base">Cari channel</h2>
+          <p className="hidden text-sm text-muted-foreground sm:block">Search, filter, dan favorit lokal.</p>
         </div>
         <Button
           type="button"
@@ -59,12 +59,12 @@ export function ChannelFilters({
           aria-pressed={filters.favoritesOnly}
           aria-label={filters.favoritesOnly ? "Tampilkan semua channel" : "Tampilkan hanya favorit"}
         >
-          <Star className="size-4" aria-hidden="true" />
-          Favorit
+          <Star className={filters.favoritesOnly ? "size-4 fill-current" : "size-4"} aria-hidden="true" />
+          <span className="hidden sm:inline">Favorit</span>
         </Button>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-2.5 md:space-y-3">
         <label className="relative block">
           <span className="sr-only">Cari nama channel</span>
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -72,7 +72,7 @@ export function ChannelFilters({
             value={filters.query}
             onChange={event => updateFilter({ query: event.target.value })}
             placeholder="Cari channel..."
-            className="h-11 pl-9"
+            className="h-10 pl-9 md:h-11"
           />
         </label>
 
@@ -113,14 +113,14 @@ export function ChannelFilters({
         </div>
       </div>
 
-      <div className="mt-4 flex items-center justify-between gap-3 text-sm text-muted-foreground">
+      <div className="mt-3 flex items-center justify-between gap-2 text-xs text-muted-foreground md:mt-4 md:gap-3 md:text-sm">
         <span>
           {resultCount} hasil
           {resultCount > visibleCount ? `, tampil ${visibleCount}` : ""}
         </span>
         <Button type="button" variant="ghost" size="sm" onClick={onReset}>
           <SlidersHorizontal className="size-4" aria-hidden="true" />
-          Reset
+          <span className="hidden sm:inline">Reset</span>
         </Button>
       </div>
     </section>

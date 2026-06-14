@@ -71,8 +71,8 @@ export function App() {
     <main className="min-h-screen bg-background text-foreground">
       <AppHeader catalog={catalog} />
 
-      <div className="mx-auto grid w-full max-w-[1500px] gap-5 px-4 py-5 md:px-6 xl:grid-cols-[minmax(360px,420px)_1fr]">
-        <aside className="order-2 space-y-4 xl:order-1">
+      <div className="mx-auto grid w-full max-w-[1500px] gap-4 px-3 py-4 md:gap-5 md:px-6 md:py-5 xl:grid-cols-[minmax(360px,420px)_1fr]">
+        <aside className="order-2 space-y-3 md:space-y-4 xl:order-1">
           <ChannelFilters
             filters={filters}
             resultCount={filteredChannels.length}
@@ -97,12 +97,12 @@ export function App() {
           />
         </aside>
 
-        <section className="order-1 space-y-4 xl:order-2">
-          <div className="overflow-hidden rounded-lg border border-border bg-card">
+        <section className="order-1 space-y-3 md:space-y-4 xl:order-2">
+          <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
             <StreamPlayer channel={selectedChannel} stream={activeStream} videoRef={videoRef} />
 
             {catalogError ? (
-              <div className="mx-4 mt-4 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-100 md:mx-5">
+              <div className="mx-3 mt-3 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-100 md:mx-4 md:mt-4">
                 {catalogError}
               </div>
             ) : null}
