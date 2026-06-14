@@ -12,7 +12,8 @@ import {
 
 const IPTV_API_BASE = process.env.IPTV_API_BASE ?? "https://iptv-org.github.io/api";
 const CACHE_TTL_MS = Number(process.env.CHANNEL_CACHE_TTL_MS ?? 1000 * 60 * 30);
-const DEFAULT_CHANNEL_LIMIT = Number(process.env.CHANNEL_LIMIT ?? 1200);
+const DEFAULT_CHANNEL_LIMIT = Number(process.env.CHANNEL_LIMIT ?? 2000);
+const PRIORITY_COUNTRIES = ["ID", "MY", "SG", "TH", "PH"]; // Southeast Asia priority
 
 let channelCache: { expiresAt: number; payload: ChannelCatalog } | null = null;
 
@@ -50,6 +51,7 @@ export async function getChannelCatalog({
     categories,
     languages,
     blocklist,
+    priorityCountries: PRIORITY_COUNTRIES,
   });
 
   channelCache = {

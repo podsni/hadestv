@@ -98,6 +98,7 @@ export type CatalogInput = {
   languages?: RawLanguage[];
   blocklist?: RawBlocklistEntry[];
   limit?: number;
+  priorityCountries?: string[];
 };
 
 export type ChannelFilters = {
@@ -170,7 +171,15 @@ export function buildChannelCatalog(input: CatalogInput): ChannelCatalog {
     }
   }
 
-  channels.sort((left, right) => getChannelScore(right) - getChannelScore(left) || left.name.localeCompare(right.name));
+  const prioritySet = new Set(input.priorityCountries ?? []);
+  channels.sort((left, right) => {
+    const leftPriority = prioritySet.has(left.countryCode) ? 1 : 0;
+    const rightPriority = prioritySet.has(right.countryCode) ? 1 : 0;
+    if (leftPriority !== rightPriority) {
+      return rightPriority - leftPriority;
+    }
+    return getChannelScore(right) - getChannelScore(left) || left.name.localeCompare(right.name);
+  });
 
   return {
     channels,

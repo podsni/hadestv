@@ -1,8 +1,9 @@
 import { Globe2, Languages, ListFilter, Search, SlidersHorizontal, Star } from "lucide-react";
-import type { ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import {
   Select,
   SelectContent,
@@ -44,6 +45,24 @@ export function ChannelFilters({
     onFiltersChange({ ...filters, ...patch });
   }
 
+  // Sort countries: Indonesia first, then Southeast Asia, then alphabetically
+  const sortedCountries = useMemo(() => {
+    const priority = ["ID", "MY", "SG", "TH", "PH", "VN", "BN"];
+    const prioritySet = new Set(priority);
+
+    return [...countries].sort((a, b) => {
+      const aIdx = priority.indexOf(a.code);
+      const bIdx = priority.indexOf(b.code);
+      const aPrio = aIdx >= 0 ? aIdx : 999;
+      const bPrio = bIdx >= 0 ? bIdx : 999;
+
+      if (aPrio !== bPrio) {
+        return aPrio - bPrio;
+      }
+      return a.name.localeCompare(b.name);
+    });
+  }, [countries]);
+
   return (
     <section className="rounded-lg border border-border bg-card p-3 shadow-sm md:p-4">
       <div className="mb-3 flex items-center justify-between gap-2 md:mb-4 md:gap-3">
@@ -77,16 +96,18 @@ export function ChannelFilters({
         </label>
 
         <div className="grid gap-2 sm:grid-cols-3 xl:grid-cols-1 2xl:grid-cols-3">
-          <FilterSelect
+          <SearchableSelect
             icon={<Globe2 className="size-4" aria-hidden="true" />}
-            label="Negara"
-            value={filters.country}
             placeholder="Negara"
-            options={countries.map(item => ({
+            value={filters.country}
+            options={sortedCountries.map(item => ({
               value: item.code,
               label: `${item.flag} ${item.name}`,
+              hint: item.code,
             }))}
             onChange={value => updateFilter({ country: value })}
+            allLabel="🌍 Semua negara"
+            emptyLabel="Negara tidak ditemukan"
           />
           <FilterSelect
             icon={<ListFilter className="size-4" aria-hidden="true" />}

@@ -17,7 +17,7 @@ const SEARCH_DEBOUNCE_MS = 200;
 export function App() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [filters, setFilters] = useState<FilterState>(() => createEmptyFilters());
-  const { catalog, catalogError, isLoadingCatalog, isRetrying, refreshCatalog } = useChannelCatalog(1200);
+  const { catalog, catalogError, isLoadingCatalog, isRetrying, refreshCatalog } = useChannelCatalog(2000);
   const { favoriteIds, toggleFavorite } = useFavorites();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [streamIndex, setStreamIndex] = useState(0);
