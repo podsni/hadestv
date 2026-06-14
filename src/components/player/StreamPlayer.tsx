@@ -43,12 +43,22 @@ export function StreamPlayer({
         setPlayerState(state);
       }
     };
-    const markReady = () => safeSetState("ready");
-    const markError = () => safeSetState("error");
-    const timeoutId = window.setTimeout(() => safeSetState("error"), 12000);
+    const markReady = () => {
+      window.clearTimeout(timeoutId);
+      safeSetState("ready");
+    };
+    const markError = () => {
+      window.clearTimeout(timeoutId);
+      safeSetState("error");
+    };
+    const timeoutId = window.setTimeout(() => {
+      console.warn('[Player] Loading timeout reached after 20 seconds');
+      safeSetState("error");
+    }, 20000);
 
     video.addEventListener("canplay", markReady);
     video.addEventListener("error", markError);
+    video.addEventListener("loadeddata", markReady);
 
     if (Hls.isSupported()) {
       hls = new Hls({
@@ -56,16 +66,22 @@ export function StreamPlayer({
         lowLatencyMode: false,
         maxBufferLength: 30,
         maxMaxBufferLength: 60,
-        manifestLoadingTimeOut: 10000,
-        manifestLoadingMaxRetry: 3,
-        levelLoadingTimeOut: 10000,
-        levelLoadingMaxRetry: 3,
-        fragLoadingTimeOut: 20000,
-        fragLoadingMaxRetry: 3,
+        manifestLoadingTimeOut: 20000,
+        manifestLoadingMaxRetry: 5,
+        levelLoadingTimeOut: 15000,
+        levelLoadingMaxRetry: 4,
+        fragLoadingTimeOut: 25000,
+        fragLoadingMaxRetry: 4,
+        debug: false,
+      });
+
+      hls.on(Hls.Events.MANIFEST_LOADING, () => {
+        console.log(`[HLS] Loading manifest for ${channel?.name} from ${stream.url}`);
       });
 
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        console.log(`[HLS] Manifest loaded for ${channel?.name}`);
+        console.log(`[HLS] Manifest parsed successfully for ${channel?.name}`);
+        window.clearTimeout(timeoutId);
         video.play().catch(err => console.warn('[HLS] Autoplay prevented:', err));
       });
 
@@ -103,8 +119,11 @@ export function StreamPlayer({
     return () => {
       video.removeEventListener("canplay", markReady);
       video.removeEventListener("error", markError);
+      video.removeEventListener("loadeddata", markReady);
       window.clearTimeout(timeoutId);
-      hls?.destroy();
+      if (hls) {
+        hls.destroy();
+      }
     };
   }, [stream?.url, retryNonce, videoRef]);
 
