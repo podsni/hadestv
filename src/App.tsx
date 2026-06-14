@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 
 import { ChannelDetails } from "@/components/channel/ChannelDetails";
 import { ChannelFilters, createEmptyFilters, type FilterState } from "@/components/channel/ChannelFilters";
@@ -6,34 +6,42 @@ import { ChannelList } from "@/components/channel/ChannelList";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { StreamPlayer } from "@/components/player/StreamPlayer";
 import { useChannelCatalog } from "@/hooks/useChannelCatalog";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useFavorites } from "@/hooks/useFavorites";
 import { filterChannels, getFacetOptions, type PublicChannel } from "@/lib/iptv";
 import "./index.css";
 
 const CHANNEL_BATCH_SIZE = 80;
+const SEARCH_DEBOUNCE_MS = 200;
 
 export function App() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [filters, setFilters] = useState<FilterState>(() => createEmptyFilters());
-  const { catalog, catalogError, isLoadingCatalog, refreshCatalog } = useChannelCatalog(1200, filters.query);
+  const { catalog, catalogError, isLoadingCatalog, isRetrying, refreshCatalog } = useChannelCatalog(1200);
   const { favoriteIds, toggleFavorite } = useFavorites();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [streamIndex, setStreamIndex] = useState(0);
   const [visibleCount, setVisibleCount] = useState(CHANNEL_BATCH_SIZE);
+
+  // Debounce search query so heavy filtering only runs after typing settles.
+  // Also pass through useDeferredValue so React can deprioritize the filter render
+  // if the user is still typing.
+  const debouncedQuery = useDebouncedValue(filters.query, SEARCH_DEBOUNCE_MS);
+  const deferredQuery = useDeferredValue(debouncedQuery);
 
   const channels = catalog.channels;
   const facets = useMemo(() => getFacetOptions(channels), [channels]);
   const filteredChannels = useMemo(
     () =>
       filterChannels(channels, {
-        query: filters.query,
+        query: deferredQuery,
         country: filters.country,
         category: filters.category,
         language: filters.language,
         favoritesOnly: filters.favoritesOnly,
         favoriteIds,
       }),
-    [channels, favoriteIds, filters],
+    [channels, favoriteIds, deferredQuery, filters.country, filters.category, filters.language, filters.favoritesOnly],
   );
   const visibleChannels = filteredChannels.slice(0, visibleCount);
   const selectedChannel =
@@ -47,7 +55,7 @@ export function App() {
 
   useEffect(() => {
     setVisibleCount(CHANNEL_BATCH_SIZE);
-  }, [filters]);
+  }, [filters.country, filters.category, filters.language, filters.favoritesOnly, deferredQuery]);
 
   useEffect(() => {
     setSelectedId(current => {

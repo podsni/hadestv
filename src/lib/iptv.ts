@@ -188,30 +188,76 @@ export function buildChannelCatalog(input: CatalogInput): ChannelCatalog {
 
 export function filterChannels(channels: PublicChannel[], filters: ChannelFilters): PublicChannel[] {
   const query = filters.query?.trim().toLowerCase();
+  const hasQuery = query.length > 0;
+  const hasCountry = !!filters.country;
+  const hasCategory = !!filters.category;
+  const hasLanguage = !!filters.language;
+  const hasFavoritesOnly = !!filters.favoritesOnly;
+  const favoriteIds = filters.favoriteIds;
 
-  return channels.filter(channel => {
-    if (filters.favoritesOnly && !filters.favoriteIds?.has(channel.id)) {
-      return false;
+  // Early-exit when no filter is applied
+  if (!hasQuery && !hasCountry && !hasCategory && !hasLanguage && !hasFavoritesOnly) {
+    return channels;
+  }
+
+  const matches: PublicChannel[] = [];
+
+  for (let i = 0; i < channels.length; i++) {
+    const channel = channels[i];
+
+    if (hasFavoritesOnly && (!favoriteIds || !favoriteIds.has(channel.id))) {
+      continue;
     }
 
-    if (query && !channel.name.toLowerCase().includes(query)) {
-      return false;
+    if (hasCountry && channel.countryCode !== filters.country) {
+      continue;
     }
 
-    if (filters.country && channel.countryCode !== filters.country) {
-      return false;
+    if (hasCategory && !channel.categoryIds.includes(filters.category!)) {
+      continue;
     }
 
-    if (filters.category && !channel.categoryIds.includes(filters.category)) {
-      return false;
+    if (hasLanguage && !channel.languageCodes.includes(filters.language!)) {
+      continue;
     }
 
-    if (filters.language && !channel.languageCodes.includes(filters.language)) {
-      return false;
+    if (hasQuery) {
+      const haystack = (channel as PublicChannel & { _searchKey?: string })._searchKey ?? buildSearchKey(channel);
+      if (!haystack.includes(query)) {
+        continue;
+      }
     }
 
-    return true;
-  });
+    matches.push(channel);
+  }
+
+  return matches;
+}
+
+let searchKeyCache: WeakMap<PublicChannel, string> | null = null;
+
+function getSearchKeyCache(): WeakMap<PublicChannel, string> {
+  if (typeof WeakMap === "undefined") {
+    // Fallback for environments without WeakMap
+    return {
+      get: (obj: PublicChannel) => (obj as PublicChannel & { _searchKey?: string })._searchKey ?? null,
+      set: (obj: PublicChannel, key: string) => {
+        (obj as PublicChannel & { _searchKey?: string })._searchKey = key;
+      },
+      has: () => true,
+      delete: () => true,
+    } as unknown as WeakMap<PublicChannel, string>;
+  }
+  if (!searchKeyCache) {
+    searchKeyCache = new WeakMap();
+  }
+  return searchKeyCache;
+}
+
+function buildSearchKey(channel: PublicChannel): string {
+  const key = `${channel.name} ${channel.countryName} ${channel.countryCode} ${channel.categoryNames.join(" ")} ${channel.languageNames.join(" ")}`.toLowerCase();
+  getSearchKeyCache().set(channel, key);
+  return key;
 }
 
 export function getFacetOptions(channels: PublicChannel[]) {
