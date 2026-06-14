@@ -188,7 +188,7 @@ export function buildChannelCatalog(input: CatalogInput): ChannelCatalog {
 
 export function filterChannels(channels: PublicChannel[], filters: ChannelFilters): PublicChannel[] {
   const query = filters.query?.trim().toLowerCase();
-  const hasQuery = query.length > 0;
+  const hasQuery = !!query;
   const hasCountry = !!filters.country;
   const hasCategory = !!filters.category;
   const hasLanguage = !!filters.language;
